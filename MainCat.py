@@ -22,7 +22,7 @@ clock = pygame.time.Clock()
 
 #I set the sprite sheet, but we have to slice this to actually fit here
 NormalCatWalk = pygame.image.load("battleCatsAnimations/normalcatwalk.png").convert_alpha()
-TankCatWalk = pygame.image.load("battleCatsAnimations/normaltankwalk.png").convert_alpha()
+TankCatWalk = pygame.image.load("battleCatsAnimations/tankwalk.png").convert_alpha()
 NormalAttack = pygame.image.load("battleCatsAnimations/normalattack.png").convert_alpha()
 TankAttack = pygame.image.load("battleCatsAnimations/tankattack.png").convert_alpha()
 spawnCat = False
@@ -32,7 +32,6 @@ catColumn = []
 
 
 NormalFramenum = 7
-TankFramenum = 6
 
 
 
@@ -56,8 +55,14 @@ while running:
         elif event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_1:
-                normalCat = newCat(NormalCatWalk,NormalAttack, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
+                normalCat = newCat("normal",NormalCatWalk,NormalAttack, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
                 catColumn.append(normalCat)
+                spawnCat = True
+                for cat in catColumn:
+                    cat.animateCat()
+            elif event.key == pygame.K_2:
+                tankCat = newCat("tank",TankCatWalk, TankAttack, TankCatWalk.get_height(),TankCatWalk.get_width(), 7)
+                catColumn.append(tankCat)
                 spawnCat = True
                 for cat in catColumn:
                     cat.animateCat()
@@ -73,7 +78,10 @@ while running:
     screen.fill((255,255,0))
     if spawnCat == True:
         for cat in catColumn:
-            cat.activeFrames(walk_speed,screen,150)
+            if cat.type == "tank":
+                cat.activeFrames(walk_speed,screen, 110)
+            elif cat.type == "normal":
+                cat.activeFrames(walk_speed,screen,150)
     pygame.display.flip()
 
 

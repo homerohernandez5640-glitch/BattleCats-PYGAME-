@@ -5,7 +5,7 @@ import sys
 pygame.init()
 
 class newCat():
-    def __init__(self,sprite,attack_sprites, FHEIGHT, FWIDTH, frames):
+    def __init__(self,type,sprite,attack_sprites, FHEIGHT, FWIDTH, frames):
         self.sprite = sprite
         self.FHEIGHT = FHEIGHT
         self.FWIDTH = FWIDTH
@@ -16,6 +16,7 @@ class newCat():
         self.attack_list = []
         self.current_frame_index= 0
         self.x = 1000
+        self.type = type
     def animateCat(self):
         for i in range(self.frames):
             x_position = i*self.single_frame_width
