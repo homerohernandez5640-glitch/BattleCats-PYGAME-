@@ -22,44 +22,58 @@ clock = pygame.time.Clock()
 
 #I set the sprite sheet, but we have to slice this to actually fit here
 NormalCatWalk = pygame.image.load("battleCatsAnimations/normalcatwalk.png").convert_alpha()
+TankCatWalk = pygame.image.load("battleCatsAnimations/normaltankwalk.png").convert_alpha()
+NormalAttack = pygame.image.load("battleCatsAnimations/normalattack.png").convert_alpha()
+TankAttack = pygame.image.load("battleCatsAnimations/tankattack.png").convert_alpha()
+spawnCat = False
+
+attack = False
+catColumn = []
 
 
-frames = []
 NormalFramenum = 7
-normalCat = newCat(NormalCatWalk,frames, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
+TankFramenum = 6
 
 
-normalCat.animateCat()
 
 
-current_frame_index = 0
 animation_timer = 0
-ANIMATION_SPEED = 100
+ANIMATION_SPEED = 200
+walk_speed = 2
+cat_x = SCREEN_WIDTH
 
 running = True
 while running:
 
-    dt = clock.tick(60)  
+    dt = clock.tick(30)  
     animation_timer += dt
+
 
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
 
+            if event.key == pygame.K_1:
+                normalCat = newCat(NormalCatWalk,NormalAttack, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
+                catColumn.append(normalCat)
+                spawnCat = True
+                for cat in catColumn:
+                    cat.animateCat()
 
-
-
-    if animation_timer >= ANIMATION_SPEED:
-        animation_timer = 0
-        current_frame_index = (current_frame_index+1) % NormalFramenum
-    
+    if spawnCat == True:
+        if animation_timer >= ANIMATION_SPEED:
+            animation_timer = 0
+            for cat in catColumn:
+                cat.animspeed()
 
 
 
     screen.fill((255,255,0))
-    active_frame = frames[current_frame_index]
-    screen.blit(active_frame, (150,100))
+    if spawnCat == True:
+        for cat in catColumn:
+            cat.activeFrames(walk_speed,screen,150)
     pygame.display.flip()
 
 
