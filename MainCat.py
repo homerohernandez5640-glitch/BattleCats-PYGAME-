@@ -7,7 +7,7 @@ from cat import newCat
 pygame.init()
 
 #Set the size of the screen
-SCREEN_WIDTH = 1200
+SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 800
 
 #display the screen with the size we just set
@@ -25,15 +25,22 @@ NormalCatWalk = pygame.image.load("battleCatsAnimations/normalcatwalk.png").conv
 TankCatWalk = pygame.image.load("battleCatsAnimations/tankwalk.png").convert_alpha()
 NormalAttack = pygame.image.load("battleCatsAnimations/normalattack.png").convert_alpha()
 TankAttack = pygame.image.load("battleCatsAnimations/tankattack.png").convert_alpha()
+catBaseImage = pygame.image.load("battleCatsAnimations/catbase.png")
+backgroundImage = pygame.image.load("backgrounds/1background.png")
+backgroundImage = pygame.transform.scale(backgroundImage,(SCREEN_WIDTH, SCREEN_HEIGHT))
+catBaseImage = pygame.transform.scale(catBaseImage,(150,300))
+HealthText = pygame.font.SysFont(None,40)
+enemyBase = pygame.image.load("battleCatsAnimations/enemybase.png").convert_alpha()
+
+
 spawnCat = False
 
 attack = False
 catColumn = []
 
-
+CatBaseHealth = 1000
+EnemyBaseHealth = 1000
 NormalFramenum = 7
-
-
 
 
 animation_timer = 0
@@ -74,14 +81,30 @@ while running:
                 cat.animspeed()
 
 
+        for cat in catColumn:
+            if cat.attack == True:
+                EnemyBaseHealth = cat.remove_enemyBase(EnemyBaseHealth)
+
+
+
 
     screen.fill((255,255,0))
+    screen.blit(backgroundImage,(0,0))
+    screen.blit(catBaseImage, (850,360))
+    screen.blit(enemyBase,(40,395))
+
+    CatBaseHealthR = HealthText.render(str(CatBaseHealth), True, (0, 0, 0))
+    EnemyBaseHealthR = HealthText.render(str(EnemyBaseHealth), True, (0, 0, 0))
+
+    screen.blit(CatBaseHealthR, (850,330))
+    screen.blit(EnemyBaseHealthR, (40, 350))
+
     if spawnCat == True:
         for cat in catColumn:
             if cat.type == "tank":
-                cat.activeFrames(walk_speed,screen, 110)
+                cat.activeFrames(walk_speed,screen, 510)
             elif cat.type == "normal":
-                cat.activeFrames(walk_speed,screen,150)
+                cat.activeFrames(walk_speed,screen,550)
     pygame.display.flip()
 
 
