@@ -1,8 +1,9 @@
 import pygame
 import sys
+import random
 
 from cat import newCat
-
+from cat import newEnemy
 #initialize pygame
 pygame.init()
 
@@ -33,10 +34,14 @@ HealthText = pygame.font.SysFont(None,40)
 enemyBase = pygame.image.load("battleCatsAnimations/enemybase.png").convert_alpha()
 
 
-spawnCat = False
+dogwalk = pygame.image.load("battleCatsAnimations/dogwalk.png").convert_alpha()
+dogattack = pygame.image.load("battleCatsAnimations/dogattack.png").convert_alpha()
 
+spawnCat = False
+spawnEnemy = False
 attack = False
 catColumn = []
+enemyColumn = []
 
 CatBaseHealth = 1000
 EnemyBaseHealth = 1000
@@ -64,28 +69,37 @@ while running:
             if event.key == pygame.K_1:
                 normalCat = newCat("normal",NormalCatWalk,NormalAttack, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
                 catColumn.append(normalCat)
+                normalCat.animateCat()
                 spawnCat = True
-                for cat in catColumn:
-                    cat.animateCat()
+                
             elif event.key == pygame.K_2:
-                tankCat = newCat("tank",TankCatWalk, TankAttack, TankCatWalk.get_height(),TankCatWalk.get_width(), 7)
+                tankCat = newCat("tank",TankCatWalk, TankAttack, TankCatWalk.get_height(),TankCatWalk.get_width(), NormalFramenum)
                 catColumn.append(tankCat)
+                tankCat.animateCat()
                 spawnCat = True
-                for cat in catColumn:
-                    cat.animateCat()
 
-    if spawnCat == True:
-        if animation_timer >= ANIMATION_SPEED:
-            animation_timer = 0
-            for cat in catColumn:
-                cat.animspeed()
-
-
+    randSpawn = random.randint(1,2000)
+    
+    if randSpawn <= 30:
+        Dog = newEnemy("dog",dogwalk,dogattack,dogwalk.get_height(), dogwalk.get_width(), NormalFramenum) 
+        enemyColumn.append(Dog)
+        Dog.animateEnemy()
+        spawnEnemy = True
+        
+    if animation_timer >= ANIMATION_SPEED:
+        animation_timer = 0
         for cat in catColumn:
-            if cat.attack == True:
-                EnemyBaseHealth = cat.remove_enemyBase(EnemyBaseHealth)
+            cat.animspeed()
+        for enemy in enemyColumn:
+            enemy.animspeed()
 
+    for cat in catColumn:
+        if cat.attack == True:
+            EnemyBaseHealth = cat.remove_enemyBase(EnemyBaseHealth)
 
+    for enemy in enemyColumn:
+        if enemy.attack == True:
+            CatBaseHealth = enemy.remove_catBase(CatBaseHealth)
 
 
     screen.fill((255,255,0))
@@ -99,12 +113,15 @@ while running:
     screen.blit(CatBaseHealthR, (850,330))
     screen.blit(EnemyBaseHealthR, (40, 350))
 
-    if spawnCat == True:
-        for cat in catColumn:
-            if cat.type == "tank":
-                cat.activeFrames(walk_speed,screen, 510)
-            elif cat.type == "normal":
-                cat.activeFrames(walk_speed,screen,550)
+    for cat in catColumn:
+        if cat.type == "tank":
+            cat.activeFrames(walk_speed,screen, 520)
+        elif cat.type == "normal":
+            cat.activeFrames(walk_speed,screen,560)
+
+    for enemy in enemyColumn:
+        enemy.activeFrames(walk_speed,screen,560)
+
     pygame.display.flip()
 
 
