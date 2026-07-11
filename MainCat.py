@@ -36,6 +36,9 @@ enemyBase = pygame.image.load("battleCatsAnimations/enemybase.png").convert_alph
 HealthText = pygame.font.SysFont(None, 40)
 Wallet = pygame.font.SysFont(None,40)
 upgrade = pygame.font.SysFont(None,40)
+upgradewallettext = pygame.font.SysFont(None,25)
+NormalPriceText = pygame.font.SysFont(None,25)
+TankPriceText = pygame.font.SysFont(None,25)
 
 
 # Load Sprite Sheets
@@ -55,6 +58,7 @@ enemyColumn = []
 
 ghostColumn = []
 
+
 CatBaseHealth = 1000
 TotalCatBase = CatBaseHealth
 EnemyBaseHealth = 1000
@@ -67,6 +71,14 @@ upgradePrice = 500
 animation_timer = 0
 ANIMATION_SPEED = 200
 walk_speed = 2
+
+cat_icon_rect = pygame.Rect(0, 0, NormalCatWalk.get_width() // NormalFramenum, NormalCatWalk.get_height())
+cat_button_icon = NormalCatWalk.subsurface(cat_icon_rect)
+cat_button_icon = pygame.transform.scale(cat_button_icon,(75,75))
+
+tank_icon_rect = pygame.Rect(0, 0, TankCatWalk.get_width() // NormalFramenum, TankCatWalk.get_height())
+tank_button_icon = TankCatWalk.subsurface(tank_icon_rect)
+tank_button_icon = pygame.transform.scale(tank_button_icon,(50,60))
 
 money = WalletManage(CurrentWallet,TotalWallet, Walletmultiplier,upgradePrice)
 running = True
@@ -81,12 +93,14 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_1 and CurrentWallet >= 50:
+            if event.key == pygame.K_1 and CurrentWallet >= 50 and newCat.can_spawn("normal"):
+                newCat.update_spawn_time("normal")
                 money.currentWallet -=50  
                 normalCat = newCat("normal", NormalCatWalk, NormalAttack, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
                 normalCat.animateCat()  # Slices frames once upon initialization
                 catColumn.append(normalCat)
-            elif event.key == pygame.K_2 and CurrentWallet >= 150:
+            elif event.key == pygame.K_2 and CurrentWallet >= 150 and newCat.can_spawn("tank"):
+                newCat.update_spawn_time("tank")
                 money.currentWallet -=150
                 tankCat = newCat("tank", TankCatWalk, TankAttack, TankCatWalk.get_height(), TankCatWalk.get_width(), NormalFramenum)
                 tankCat.animateCat()    # Slices frames once upon initialization
@@ -101,7 +115,7 @@ while running:
                 
     # --- 2. AUTOMATED ENEMY SPRAWNING ---
     randSpawn = random.randint(1, 2000)                                                                            
-    if randSpawn <= 5:
+    if randSpawn <= 10:
         Dog = newEnemy("dog", dogwalk, dogattack, dogwalk.get_height(), dogwalk.get_width(), NormalFramenum)
         Dog.animateEnemy() # Slices frames once upon initialization
         enemyColumn.append(Dog)
@@ -193,16 +207,40 @@ while running:
     EnemyBaseHealthR = HealthText.render(str(EnemyBaseHealth)+"/"+str(TotalEnemyBase), True, (0, 0, 0))
     WalletText = Wallet.render(str(CurrentWallet)+"/"+str(TotalWallet), True,(0 ,0 , 0))
     upgrades = upgrade.render("UPGRADE", True, (255,255,0))
+    upgradewallettexts = upgradewallettext.render(str(money.upgradePrice),True,(255,255,0))
     screen.blit(CatBaseHealthR, (850, 330))
     screen.blit(EnemyBaseHealthR, (40, 350))
     screen.blit(WalletText,(870,40))
+    
+
+   
 
     if money.currentWallet >= money.upgradePrice:
         pygame.draw.rect(screen, (255, 120, 0), (20, 690, 200, 50))
     else:
         pygame.draw.rect(screen, (100, 255, 0), (20, 690, 200, 50))
     screen.blit(upgrades, (40,700))
+    screen.blit(upgradewallettexts, (100,725))
 
+    if money.currentWallet >= 50 and newCat.can_spawn("normal"):
+        pygame.draw.rect(screen, (255, 255, 255), (400, 690, 100, 50))
+    else:
+        pygame.draw.rect(screen, (120, 120, 120), (400, 690, 100, 50))
+    
+    if money.currentWallet >= 150 and newCat.can_spawn("tank"):
+        pygame.draw.rect(screen, (255, 255, 255), (550, 690, 100, 50))
+    else:
+        pygame.draw.rect(screen, (120, 120, 120), (550, 690, 100, 50))
+
+    screen.blit(tank_button_icon,(575,680))
+    screen.blit(cat_button_icon,(410,665))
+    screen.blit(upgrades, (40,700))
+    screen.blit(upgradewallettexts, (100,725))
+    NormalPrice = NormalPriceText.render("50", True,(0 ,0 , 0))
+    TankPrice = TankPriceText.render("150", True,(0 ,0 , 0))
+    screen.blit(NormalPrice,(400,690))
+    screen.blit(TankPrice,(550,690))
+ 
     # Draw active ally units onto the view screen matrix
     for cat in catColumn:
         if cat.type == "tank":
@@ -212,7 +250,7 @@ while running:
 
     # Draw active enemy units onto the view screen matrix
     for enemy in enemyColumn:
-        enemy.activeFrames(walk_speed, screen, 560)
+        enemy.activeFrames(walk_speed, screen, 580)
 
 
     # --- DRAW FLOATING GHOST EFFECTS ---

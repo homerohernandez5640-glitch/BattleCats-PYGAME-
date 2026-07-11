@@ -1,6 +1,13 @@
 import pygame
 
 class newCat():
+
+    last_normal_spawn_time = 0
+    last_tank_spawn_time = 0
+    
+    NORMAL_COOLDOWN = 3000  # 3 seconds
+    TANK_COOLDOWN = 5000    # 5 seconds
+
     def __init__(self, cat_type, sprite, attack_sprites, FHEIGHT, FWIDTH, frames):
         self.sprite = sprite
         self.FHEIGHT = FHEIGHT
@@ -19,6 +26,30 @@ class newCat():
         self.last_hit_time = 0  
         self.cooldown_period = 1500  
         self.target = None  # Tracks the specific enemy this cat is fighting
+
+
+
+
+    # A class method lets you check if a cat can spawn without needing an alive cat object
+    @classmethod
+    def can_spawn(cls, cat_type):
+        current_time = pygame.time.get_ticks()
+        if cat_type == "normal":
+            return (current_time - cls.last_normal_spawn_time) >= cls.NORMAL_COOLDOWN
+        elif cat_type == "tank":
+            return (current_time - cls.last_tank_spawn_time) >= cls.TANK_COOLDOWN
+        return False
+
+
+    # A class method to update the shared timestamp when a cat is successfully deployed
+    @classmethod
+    def update_spawn_time(cls, cat_type):
+        current_time = pygame.time.get_ticks()
+        if cat_type == "normal":
+            cls.last_normal_spawn_time = current_time
+        elif cat_type == "tank":
+            cls.last_tank_spawn_time = current_time
+
 
     def animateCat(self):
         self.frames_list.clear()
