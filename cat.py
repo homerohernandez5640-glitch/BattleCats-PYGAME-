@@ -4,9 +4,11 @@ class newCat():
 
     last_normal_spawn_time = 0
     last_tank_spawn_time = 0
+    last_axe_spawn_time = 0
     
-    NORMAL_COOLDOWN = 3000  # 3 seconds
+    NORMAL_COOLDOWN =3000  # 3 seconds
     TANK_COOLDOWN = 5000    # 5 seconds
+    AXE_COOLDOWN = 8000    # 8 seconds
 
     def __init__(self, cat_type, sprite, attack_sprites, FHEIGHT, FWIDTH, frames):
         self.sprite = sprite
@@ -38,6 +40,8 @@ class newCat():
             return (current_time - cls.last_normal_spawn_time) >= cls.NORMAL_COOLDOWN
         elif cat_type == "tank":
             return (current_time - cls.last_tank_spawn_time) >= cls.TANK_COOLDOWN
+        elif cat_type == "axe":
+            return (current_time - cls.last_axe_spawn_time) >= cls.AXE_COOLDOWN
         return False
 
 
@@ -49,7 +53,8 @@ class newCat():
             cls.last_normal_spawn_time = current_time
         elif cat_type == "tank":
             cls.last_tank_spawn_time = current_time
-
+        elif cat_type == "axe":
+            cls.last_axe_spawn_time = current_time
 
     def animateCat(self):
         self.frames_list.clear()
@@ -70,7 +75,12 @@ class newCat():
             self.attack = True
             screen.blit(active_frame, (self.x, y))
         else:
-            self.x -= walkspeed
+            if self.type == "normal":
+                self.x -= walkspeed
+            elif self.type == "tank":
+                self.x -= (walkspeed - 0.25)
+            elif self.type == "axe":
+                self.x -= (walkspeed +0.25)
             active_frame = self.frames_list[self.current_frame_index]
             screen.blit(active_frame, (self.x, y))
             self.attack = False
@@ -84,6 +94,8 @@ class newCat():
             self.health = 90
         elif self.type == "tank":
             self.health = 200
+        elif self.type == "axe":
+            self.health = 120
 
     def remove_enemyBase(self, BaseHealth):
         current_time = pygame.time.get_ticks()
@@ -93,6 +105,8 @@ class newCat():
                 BaseHealth -= 30
             elif self.type == "tank":
                 BaseHealth -= 15
+            elif self.type == "axe":
+                BaseHealth -= 50
         return BaseHealth                                                                                                      
 
 class newEnemy():
@@ -137,7 +151,7 @@ class newEnemy():
             if self.type == "dog":
                 self.x += walkspeed
             elif self.type == "snake":
-                self.x += (walkspeed + 1)
+                self.x += (walkspeed +1)
             active_frame = self.frames_list[self.current_frame_index]
             screen.blit(active_frame, (self.x, y))
             self.attack = False
@@ -159,7 +173,7 @@ class newEnemy():
             if self.type == "dog":
                 BaseHealth -= 30
             elif self.type == "snake":
-                BaseHealth -= 15
+                BaseHealth -= 50
         return BaseHealth
 
 
