@@ -5,12 +5,14 @@ class newCat():
     last_normal_spawn_time = 0
     last_tank_spawn_time = 0
     last_axe_spawn_time = 0
-    
+    last_bird_spawn_time = 0    
+
     NORMAL_COOLDOWN =3000  # 3 seconds
     TANK_COOLDOWN = 5000    # 5 seconds
     AXE_COOLDOWN = 8000    # 8 seconds
+    BIRD_COOLDOWN = 15000    # 15 seconds
 
-    def __init__(self, cat_type, sprite, attack_sprites, FHEIGHT, FWIDTH, frames):
+    def __init__(self, cat_type, sprite, attack_sprites, FHEIGHT, FWIDTH, frames, range):
         self.sprite = sprite
         self.FHEIGHT = FHEIGHT
         self.FWIDTH = FWIDTH
@@ -28,7 +30,7 @@ class newCat():
         self.last_hit_time = 0  
         self.cooldown_period = 1500  
         self.target = None  # Tracks the specific enemy this cat is fighting
-
+        self.range = range
 
 
 
@@ -42,8 +44,9 @@ class newCat():
             return (current_time - cls.last_tank_spawn_time) >= cls.TANK_COOLDOWN
         elif cat_type == "axe":
             return (current_time - cls.last_axe_spawn_time) >= cls.AXE_COOLDOWN
+        elif cat_type == "bird":
+            return (current_time - cls.last_bird_spawn_time) >= cls.BIRD_COOLDOWN
         return False
-
 
     # A class method to update the shared timestamp when a cat is successfully deployed
     @classmethod
@@ -55,6 +58,8 @@ class newCat():
             cls.last_tank_spawn_time = current_time
         elif cat_type == "axe":
             cls.last_axe_spawn_time = current_time
+        elif cat_type == "bird":
+            cls.last_bird_spawn_time = current_time
 
     def animateCat(self):
         self.frames_list.clear()
@@ -70,7 +75,7 @@ class newCat():
 
     def activeFrames(self, walkspeed, screen, y):
         # Stop walking and switch to attack animation if fighting a target or at base
-        if self.target is not None or self.x <= 130:
+        if self.target is not None or self.x <= 70+self.range:
             active_frame = self.attack_list[self.current_frame_index]
             self.attack = True
             screen.blit(active_frame, (self.x, y))
@@ -81,6 +86,8 @@ class newCat():
                 self.x -= (walkspeed - 0.25)
             elif self.type == "axe":
                 self.x -= (walkspeed +0.25)
+            elif self.type == "bird":
+                self.x -= (walkspeed -0.3)
             active_frame = self.frames_list[self.current_frame_index]
             screen.blit(active_frame, (self.x, y))
             self.attack = False
@@ -96,6 +103,9 @@ class newCat():
             self.health = 200
         elif self.type == "axe":
             self.health = 120
+        elif self.type == "bird":
+            self.health = 60
+
 
     def remove_enemyBase(self, BaseHealth):
         current_time = pygame.time.get_ticks()
@@ -107,6 +117,8 @@ class newCat():
                 BaseHealth -= 15
             elif self.type == "axe":
                 BaseHealth -= 50
+            elif self.type == "bird":
+                BaseHealth -= 80
         return BaseHealth                                                                                                      
 
 class newEnemy():
@@ -126,7 +138,7 @@ class newEnemy():
         self.attack = False
         self.start_time = pygame.time.get_ticks()
         self.last_hit_time = 0  
-        self.cooldown_period = 1500  
+        self.cooldown_period = 1400  
         self.target = None  # FIX: Added missing single-target tracking attribute
 
     def animateEnemy(self):

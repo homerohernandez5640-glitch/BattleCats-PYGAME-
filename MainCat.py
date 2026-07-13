@@ -2,10 +2,12 @@ import pygame
 import sys
 import random
 
+from CatManagement import catBox
 from cat import newCat
 from cat import newEnemy
 from cat import GhostFX
 from cat import WalletManage
+from CatManagement import newCatMan
 
 # Initialize pygame
 pygame.init()
@@ -40,6 +42,7 @@ upgradewallettext = pygame.font.SysFont(None,25)
 NormalPriceText = pygame.font.SysFont(None,25)
 TankPriceText = pygame.font.SysFont(None,25)
 AxePriceText = pygame.font.SysFont(None,25)
+BirdPriceText = pygame.font.SysFont(None,25)
 
 # Load Sprite Sheets
 NormalCatWalk = pygame.image.load("battleCatsAnimations/normalcatwalk.png").convert_alpha()
@@ -48,6 +51,9 @@ AxeWalk = pygame.image.load("battleCatsAnimations/axewalk.png").convert_alpha()
 NormalAttack = pygame.image.load("battleCatsAnimations/normalattack.png").convert_alpha()
 TankAttack = pygame.image.load("battleCatsAnimations/tankattack.png").convert_alpha()
 AxeAttack = pygame.image.load("battleCatsAnimations/axeattack.png").convert_alpha()
+BirdFly = pygame.image.load("battleCatsAnimations/birdfly.png").convert_alpha()
+BirdAttack = pygame.image.load("battleCatsAnimations/birdattack.png").convert_alpha()
+
 
 SnakeWalk = pygame.image.load("battleCatsAnimations/snakewalk.png").convert_alpha()
 SnakeAttack = pygame.image.load("battleCatsAnimations/snakeattack.png").convert_alpha()
@@ -69,27 +75,23 @@ EnemyBaseHealth = 1000
 TotalEnemyBase = EnemyBaseHealth
 NormalFramenum = 7
 CurrentWallet = 0
-TotalWallet = 2000
+TotalWallet = 500
 Walletmultiplier = 1
-upgradePrice = 500
+upgradePrice = 80
 animation_timer = 0
 ANIMATION_SPEED = 200
 walk_speed = 2
 
-cat_icon_rect = pygame.Rect(0, 0, NormalCatWalk.get_width() // NormalFramenum, NormalCatWalk.get_height())
-cat_button_icon = NormalCatWalk.subsurface(cat_icon_rect)
-cat_button_icon = pygame.transform.scale(cat_button_icon,(75,75))
-
-tank_icon_rect = pygame.Rect(0, 0, TankCatWalk.get_width() // NormalFramenum, TankCatWalk.get_height())
-tank_button_icon = TankCatWalk.subsurface(tank_icon_rect)
-tank_button_icon = pygame.transform.scale(tank_button_icon,(50,60))
-
-axe_icon_rect = pygame.Rect(0, 0, AxeWalk.get_width() // NormalFramenum, AxeWalk.get_height())
-axe_button_icon = AxeWalk.subsurface(axe_icon_rect)
-axe_button_icon = pygame.transform.scale(axe_button_icon,(50,60))
-
 
 money = WalletManage(CurrentWallet,TotalWallet, Walletmultiplier,upgradePrice)
+
+
+Ncat = newCatMan(50,"normal",NormalCatWalk,NormalAttack,NormalFramenum,catColumn, money, 60)
+Tcat = newCatMan(150,"tank",TankCatWalk,TankAttack,NormalFramenum,catColumn, money, 60)
+Acat = newCatMan(350,"axe",AxeWalk,AxeAttack,NormalFramenum,catColumn, money, 60)
+Bcat = newCatMan(650,"bird",BirdFly,BirdAttack,NormalFramenum,catColumn, money, 120)
+
+
 running = True
 while running:
 
@@ -102,31 +104,26 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_1 and CurrentWallet >= 50 and newCat.can_spawn("normal"):
-                newCat.update_spawn_time("normal")
-                money.currentWallet -=50  
-                normalCat = newCat("normal", NormalCatWalk, NormalAttack, NormalCatWalk.get_height(), NormalCatWalk.get_width(), NormalFramenum)
-                normalCat.animateCat()  # Slices frames once upon initialization
-                catColumn.append(normalCat)
-            elif event.key == pygame.K_2 and CurrentWallet >= 150 and newCat.can_spawn("tank"):
-                newCat.update_spawn_time("tank")
-                money.currentWallet -=150
-                tankCat = newCat("tank", TankCatWalk, TankAttack, TankCatWalk.get_height(), TankCatWalk.get_width(), NormalFramenum)
-                tankCat.animateCat()    # Slices frames once upon initialization
-                catColumn.append(tankCat)
+            if event.key == pygame.K_1:
+                Ncat.try_spawn_cat()
+
+            elif event.key == pygame.K_2:
+                Tcat.try_spawn_cat()
+
             elif event.key == pygame.K_u and money.upgradePrice <= money.currentWallet:
                 money.upgrade()
                 Walletmultiplier = money.GainMultiplier
                 CurrentWallet = money.currentWallet
                 TotalWallet = money.TotalWallet
                 upgradePrice = upgradePrice
-            elif event.key == pygame.K_3 and CurrentWallet >= 350 and newCat.can_spawn("axe"):
-                newCat.update_spawn_time("axe")
-                money.currentWallet -=350
-                AxeCat = newCat("axe", AxeWalk, AxeAttack, AxeWalk.get_height(), AxeWalk.get_width(), NormalFramenum)
-                AxeCat.animateCat()  # Slices frames once upon initialization
-                catColumn.append(AxeCat)
+ 
+            elif event.key == pygame.K_3:
+                Acat.try_spawn_cat()
                 
+            elif event.key == pygame.K_4:
+                Bcat.try_spawn_cat()
+
+
     # --- 2. AUTOMATED ENEMY SPRAWNING ---
     randSpawn = random.randint(1, 6000)                                                                            
     if randSpawn <= 10:
@@ -140,21 +137,19 @@ while running:
 
 
     # --- 3. FILTER OUT DEAD CHARACTER OBJECTS AND SPAWN GHOSTS ---
-    for cat in catColumn:
-        if cat.health <= 0:
-            # Spawn a ghost at the center of the dying cat
-            ghostColumn.append(GhostFX(cat.x + 20, 560, ghost_img))
-    catColumn = [cat for cat in catColumn if cat.health > 0]
+    dead_cats = [cat for cat in catColumn if cat.health <= 0]
+    for cat in dead_cats:
+        ghostColumn.append(GhostFX(cat.x + 20, 560, ghost_img))
+    catColumn[:] = [cat for cat in catColumn if cat.health > 0]
 
-    for enemy in enemyColumn:
-        if enemy.health <= 0:
-            # Spawn a ghost at the center of the dying enemy
-            if enemy.type == "dog":
-                money.currentWallet += 75
-            elif enemy.type == "snake":
-                money.currentWallet +=100
-            ghostColumn.append(GhostFX(enemy.x + 20, 560, ghost_img))
-    enemyColumn = [enemy for enemy in enemyColumn if enemy.health > 0]
+    dead_enemies = [enemy for enemy in enemyColumn if enemy.health <= 0]
+    for enemy in dead_enemies:
+        if enemy.type == "dog":
+            money.currentWallet += 75
+        elif enemy.type == "snake":
+            money.currentWallet += 100
+        ghostColumn.append(GhostFX(enemy.x + 20, 560, ghost_img))
+    enemyColumn[:] = [enemy for enemy in enemyColumn if enemy.health > 0]
 
 
     # --- 4. STEP SPRITE FRAME ANIMATIONS ---
@@ -170,11 +165,11 @@ while running:
     for cat in catColumn:
         if cat.target and cat.target.health <= 0:
             cat.target = None
-            
-        if cat.target is None and cat.x > 40:
+
+        if cat.target is None and cat.x > cat.range:    
             for enemy in enemyColumn:
                 # If an opposing unit is close enough, engage target lock
-                if enemy.x < cat.x and (cat.x - enemy.x) <= 60:
+                if enemy.x < cat.x and (cat.x - enemy.x) <= cat.range:
                     cat.target = enemy
                     break  # Break ensures it targets only a single enemy unit
 
@@ -205,10 +200,12 @@ while running:
                         cat.target.health -=15
                     elif cat.type == "axe":
                         cat.target.health -=50
+                    elif cat.type == "bird":
+                        cat.target.health -=80
                     else:
                         cat.target.health -=15
                 
-            elif cat.x <= 130:
+            elif cat.x <= 70+cat.range:
                 # Attack the main enemy base only if no unit is blocking the way
                 EnemyBaseHealth = cat.remove_enemyBase(EnemyBaseHealth)
 
@@ -256,34 +253,25 @@ while running:
     screen.blit(upgrades, (40,700))
     screen.blit(upgradewallettexts, (100,725))
 
-    if money.currentWallet >= 50 and newCat.can_spawn("normal"):
-        pygame.draw.rect(screen, (255, 255, 255), (400, 690, 100, 50))
-    else:
-        pygame.draw.rect(screen, (120, 120, 120), (400, 690, 100, 50))
-    
-    if money.currentWallet >= 150 and newCat.can_spawn("tank"):
-        pygame.draw.rect(screen, (255, 255, 255), (550, 690, 100, 50))
-    else:
-        pygame.draw.rect(screen, (120, 120, 120), (550, 690, 100, 50))
-
-    if money.currentWallet >= 350 and newCat.can_spawn("axe"):
-        pygame.draw.rect(screen, (255, 255, 255), (700, 690, 100, 50))
-    else:
-        pygame.draw.rect(screen, (120, 120, 120), (700, 690, 100, 50))
-
-    screen.blit(tank_button_icon,(575,680))
-    screen.blit(cat_button_icon,(410,665))
-    screen.blit(axe_button_icon,(725,680))
     screen.blit(upgrades, (40,700))
     screen.blit(upgradewallettexts, (100,725))
-    NormalPrice = NormalPriceText.render("50", True,(0 ,0 , 0))
-    TankPrice = TankPriceText.render("150", True,(0 ,0 , 0))
-    AxePrice = AxePriceText.render("350", True,(0 ,0 , 0))
-    screen.blit(NormalPrice,(400,690))
-    screen.blit(TankPrice,(550,690))
-    screen.blit(AxePrice,(700,690)) 
+
+    NormalCat = catBox(money,50,catColumn,"normal",250,screen, NormalCatWalk,260, 665, NormalPriceText,NormalFramenum,75,75)
+    NormalCat.printCatBox()
+    
+
+    TankCat = catBox(money,150,catColumn,"tank",400,screen,TankCatWalk,425,680,TankPriceText,NormalFramenum, 50, 60)
+    TankCat.printCatBox()
+
+    AxeCat = catBox(money, 350, catColumn, "axe", 550, screen, AxeWalk, 575, 680, AxePriceText, NormalFramenum, 50,60)
+    AxeCat.printCatBox()
+
+    BirdCat = catBox(money, 650, catColumn, "bird", 700, screen, BirdFly, 725,680, BirdPriceText, NormalFramenum, 50,60)
+    BirdCat.printCatBox()
 
     # Draw active ally units onto the view screen matrix
+
+    # === END DEBUG ===
     for cat in catColumn:
         if cat.type == "tank":
             cat.activeFrames(walk_speed, screen, 520)
@@ -291,6 +279,8 @@ while running:
             cat.activeFrames(walk_speed, screen, 560)
         elif cat.type == "axe":
             cat.activeFrames(walk_speed, screen, 560)
+        elif cat.type == "bird":
+            cat.activeFrames(walk_speed, screen, 460)
 
     # Draw active enemy units onto the view screen matrix
     for enemy in enemyColumn:
